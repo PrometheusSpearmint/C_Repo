@@ -48,11 +48,11 @@ void to_op(unsigned char OP, int& op1, int& op2)
     for(int i = 0; i < 4; i++){
         op = r[i] + op;
     }
-    op1 = to_dec(op);
+    op2 = to_dec(op);
     for(int i = 4; i < 8; i++){
         op = r[i] + op;
     }
-    op2 = to_dec(op);
+    op1 = to_dec(op);
 }
 
 int main()
