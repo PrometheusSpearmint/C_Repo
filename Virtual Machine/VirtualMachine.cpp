@@ -7,7 +7,7 @@ using namespace std;
 
 int to_dec(string str){
     int temp = 0;
-    for(int i = str.length(); i > 0; i--){
+    for(int i = str.length(); i >= 0; i--){
         if(str[i] == '1') temp += pow(2, i);
     }
     return temp;
