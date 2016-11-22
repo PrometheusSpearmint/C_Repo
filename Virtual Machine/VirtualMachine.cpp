@@ -8,10 +8,11 @@ using namespace std;
 void make_byte(string& str)
 {
     if(str.length() == 8) return;
-    for(int i = 0; i < 8-str.length(); i++){
+    int x = 8 - str.length();
+    for(int i = 0; i < x; i++){
         str = '0' + str;
     }
-    return
+    return;
 }
 
 string to_str(int n)
@@ -22,9 +23,10 @@ string to_str(int n)
 }
 
 int to_dec(string str){
-    int temp = 0;
-    for(int i = str.length(); i >= 0; i--){
-        if(str[i] == '1') temp += pow(2, i);
+    int temp = 0, x = 0;
+    for(int i = str.length()-1; i >= 0; i--){
+        if(str[i] == '1') temp += pow(2, x);
+        x++;
     }
     return temp;
 }
@@ -34,6 +36,7 @@ void LSR(unsigned char& OP)
     string r;
     int n = (int)OP;
     r = to_str(n);
+    make_byte(r);
     for(int i = r.length(); i >=0; i--){
         if(i = 0){
             r[i] = '0';
@@ -48,8 +51,9 @@ void LSL(unsigned char& OP)
     string r;
     int n = (int)OP;
     r = to_str(n);
+    make_byte(r);
     for(int i = 0; i < r.length(); i++){
-        if(i = r.length()-1){
+        if(i == r.length()-1){
             r[i] = '0';
         }else r[i] = r[i+1];
     }
@@ -63,22 +67,26 @@ void to_op(unsigned char OP, int& op1, int& op2)
     string r, op;
 
     r = to_str(n);
-    for(int i = 0; i < 4; i++){
+    make_byte(r);
+    for(int i = 3; i >= 0; i--){
         op = r[i] + op;
     }
     op2 = to_dec(op);
-    for(int i = 4; i < 8; i++){
+    op = "";
+    for(int i = 7; i >= 4; i--){
         op = r[i] + op;
     }
     op1 = to_dec(op);
+    //cout << endl <<" op1, op2: " << op1 << " " << op2 << endl;
+    return;
 }
 
-unsigned char XOR(unsigned char op1, unsigned char op2, unsigned char* REG[])
+unsigned char XOR(unsigned char op1, unsigned char op2, unsigned char REG[])
 {
-    bool a, b, c;
+    bool a, b;
     string OP1, OP2, rez;
-    OP1 = to_str(REG[(int)op1]);
-    OP2 = to_str(REG[(int)op2]);
+    OP1 = to_str((int)op1);
+    OP2 = to_str((int)op2);
     make_byte(OP1); make_byte(OP2);
     for(int i = 0; i < 8; i++){
         if(OP1[i] == '1') a = true;
@@ -91,12 +99,12 @@ unsigned char XOR(unsigned char op1, unsigned char op2, unsigned char* REG[])
     return (unsigned char)to_dec(rez);
 }
 
-unsigned char OR(unsigned char op1, unsigned char op2, unsigned char* REG[])
+unsigned char OR(unsigned char op1, unsigned char op2, unsigned char REG[])
 {
-    bool a, b, c;
+    bool a, b;
     string OP1, OP2, rez;
-    OP1 = to_str(REG[(int)op1]);
-    OP2 = to_str(REG[(int)op2]);
+    OP1 = to_str((int)op1);
+    OP2 = to_str((int)op2);
     make_byte(OP1); make_byte(OP2);
     for(int i = 0; i < 8; i++){
         if(OP1[i] == '1') a = true;
@@ -120,16 +128,19 @@ int main()
     ifstream bin("decryptor.bin", ios::in | ios::binary);
     for(int i = 0; i < 32; i++){
         MEM[i] = bin.get();
-        cout << (int)MEM[i] << " ";
     } bin.close();
 
     ifstream enc("q1_encr.txt");
-    ofstream dec("q1_decr.txt"
-    int memptr = 0;
+    unsigned int memptr = 0;
+    unsigned int meme;
     while(!RET){
-        switch((int)MEM[memptr])
+        if(memptr > 255) memptr -= 256;
+        //cout << "memptr:" << memptr << " MEM[" << hex << (int)MEM[memptr] << "] REG[0]&[1]: " << (int)REG[0] << " " << (int)REG[1] << " MEM[memptr+1] " << (int)MEM[memptr+1] << dec << endl;
+        meme = (int)MEM[memptr];
+        switch(meme)
         {
         case 1:
+            //cout << "case " << (int)MEM[memptr] << endl;
             to_op(MEM[memptr+1], op1, op2);
             temp = (int)REG[op1];
             temp++;
@@ -166,12 +177,14 @@ int main()
             memptr += (int)MEM[memptr+1];
             break;
         case 10:
-            if(IN_flag) memptr += (int)MEM[memptr+1];
+            if(IN_flag){
+                memptr += (int)MEM[memptr+1];
+            }
+            else memptr += 2;
             break;
         case 11:
             RET = true;
             enc.close();
-            dec.close();
             break;
         case 12:
             to_op(MEM[memptr+1], op1, op2);
@@ -199,16 +212,19 @@ int main()
             break;
         case 16:
             to_op(MEM[memptr+1], op1, op2);
-            enc >> REG[op1];
+            if(enc.eof()){
+                IN_flag = true;
+            }
+            REG[op1] = enc.get();
             memptr += 2;
             break;
         case 17:
             to_op(MEM[memptr+1], op1, op2);
-            dec << REG[op1];
+            cout << REG[op1];
             memptr += 2;
             break;
         }
     }
-    
+
     return 0;
 }
